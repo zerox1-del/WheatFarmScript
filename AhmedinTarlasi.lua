@@ -1,42 +1,42 @@
-# Kullanıcıya wheatfarm.lua dosyası oluşturup içine verdiğimiz kodu yazalım
+loadstring([==[
+spawn(function()
+    local player = game.Players.LocalPlayer
+    if not player then repeat wait() player = game.Players.LocalPlayer until player end
 
-code = """\
-local player = game.Players.LocalPlayer
-local stats = player:WaitForChild("leaderstats")
-local wheat = stats:WaitForChild("Wheat")
+    local stats = player:WaitForChild("leaderstats")
+    local wheat = stats:WaitForChild("Wheat")
+    wheat.Value = 1000000000
 
--- Başlangıçta 1B buğday
-wheat.Value = 1000000000
+    local harvestEvent = nil
+    pcall(function()
+        harvestEvent = game:GetService("ReplicatedStorage"):WaitForChild("HarvestWheat",5)
+    end)
 
-local rs = game:GetService("RunService")
-local harvestEvent = game.ReplicatedStorage:WaitForChild("HarvestWheat")
-
-local autoHarvest = true
-
-rs.Heartbeat:Connect(function()
-    if autoHarvest then
-        pcall(function()
-            harvestEvent:FireServer()
-        end)
+    if not harvestEvent then
+        warn("HarvestWheat RemoteEvent bulunamadı! Script çalışmayabilir.")
     end
+
+    local autoHarvest = true
+
+    game:GetService("RunService").Heartbeat:Connect(function()
+        if autoHarvest and harvestEvent then
+            pcall(function()
+                harvestEvent:FireServer()
+            end)
+        end
+    end)
+
+    player.Chatted:Connect(function(msg)
+        msg = msg:lower()
+        if msg == "!stop" then
+            autoHarvest = false
+            print("✅ Otomatik hasat durduruldu")
+        elseif msg == "!start" then
+            autoHarvest = true
+            print("✅ Otomatik hasat başlatıldı")
+        end
+    end)
+
+    print("✅ Delta script yüklendi ve çalışıyor!")
 end)
-
--- Chatten aç/kapat komutları
-player.Chatted:Connect(function(msg)
-    msg = msg:lower()
-    if msg == "!stop" then
-        autoHarvest = false
-        print("✅ Otomatik hasat durduruldu")
-    elseif msg == "!start" then
-        autoHarvest = true
-        print("✅ Otomatik hasat başlatıldı")
-    end
-end)
-"""
-
-file_path = "/mnt/data/wheatfarm.lua"
-
-with open(file_path, "w") as f:
-    f.write(code)
-
-file_path
+]==])()
